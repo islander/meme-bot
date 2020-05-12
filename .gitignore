@@ -1,3 +1,5 @@
 meme-bot
 .memerc
 resources/
+*.html
+*.out
