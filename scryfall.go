@@ -72,7 +72,7 @@ func (sf *SFClient) GetImage(ctx context.Context, card Card) (string, error) {
 		card.Face = "front"
 	}
 
-	fileName := cacheDir + "/" + card.ScryfallID + "[" + card.Language + "][" + card.Face + "].jpg"
+	fileName := conf.CacheDir + "/" + card.ScryfallID + "[" + card.Language + "][" + card.Face + "].jpg"
 
 	if _, err := os.Stat(fileName); os.IsNotExist(err) {
 		base, err := url.Parse(BaseURL)

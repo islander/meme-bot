@@ -17,7 +17,6 @@ import (
 const (
 	DBName          = "mtg"
 	cardsCollection = "cards"
-	URI             = "mongodb://localhost:27017/"
 )
 
 func InsertTest(collection *mongo.Collection, card bson.M) primitive.ObjectID {
@@ -38,7 +37,7 @@ func InsertTest(collection *mongo.Collection, card bson.M) primitive.ObjectID {
 func searchCards(searchTerm string) (cardList []string) {
 	// connecting
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(URI))
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(conf.MongoURI))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -57,7 +56,7 @@ func searchCards(searchTerm string) (cardList []string) {
 
 	langCode := langInfo.Lang.Iso6391() // short one: "en", "ru", etc.
 
-	fmt.Printf("Detected lang: %v\n", langCode)
+	log.Printf("Detected lang: %v\n", langCode)
 
 	// Full-Text Search FTW!
 	filter := bson.M{"$text": bson.M{"$search": searchTerm, "$language": langCode}}
@@ -100,7 +99,7 @@ func findOneCard(args ...string) (card Card, err error) {
 
 	// connecting
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(URI))
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(conf.MongoURI))
 	if err != nil {
 		return Card{}, err
 	}
@@ -120,7 +119,7 @@ func findOneCard(args ...string) (card Card, err error) {
 
 	langCode := langInfo.Lang.Iso6391() // short one: "en", "ru", etc.
 
-	fmt.Printf("Detected lang: %v\n", langCode)
+	log.Printf("Detected lang: %v\n", langCode)
 
 	// Full-Text Search FTW!
 	fts := bson.M{}

@@ -4,17 +4,14 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 	"strings"
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 )
 
-const cacheDir = "/var/mtg"
-
 func telegramBot() {
-	bot, err := tgbotapi.NewBotAPI(os.Getenv("MEME_TOKEN"))
+	bot, err := tgbotapi.NewBotAPI(conf.BotToken)
 	if err != nil {
 		log.Panic(err)
 	}

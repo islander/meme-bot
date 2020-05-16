@@ -1,5 +1,5 @@
 meme-bot
-.memerc
+meme.toml
 resources/
 *.html
 *.out
