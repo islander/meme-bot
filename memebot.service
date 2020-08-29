@@ -1,0 +1,16 @@
+[Unit]
+Description=Telegram bot 'Meddling Mage'
+After=syslog.target
+After=network.target
+
+[Service]
+Type=simple
+User=nobody
+WorkingDirectory=/opt/memebot
+ExecStart=/opt/memebot/meme-bot
+
+RestartSec=10
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
