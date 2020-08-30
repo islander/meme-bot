@@ -1,3 +1,7 @@
 mongo_uri = "mongodb://localhost:27017"
 tg_bot_token = "<put-your-token-here>"
 cache_dir = "/tmp"
+minio_endpoint = "localhost:9000"
+minio_bucket = "bucketname"
+minio_access_key = "minio"
+minio_secret = "changeme"

@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -27,21 +26,23 @@ func telegramBot() {
 
 	sf := NewSFClient()
 
-	getImg := func(query []string) (fileName string, err error) {
+	getImg := func(query []string) (CardImage, error) {
 		ctx := context.Background()
 		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 		defer cancel()
 
 		card, err := findOneCard(query...)
 		if err != nil {
-			return "", err
+			return CardImage{}, err
 		}
 
-		fileName, err = sf.GetImage(ctx, card)
+		err, fileData := sf.GetImage(ctx, card)
 		if err != nil {
-			return "", err
+			return CardImage{}, err
 		}
-		return fileName, nil
+
+		log.Println("Read: ", len(fileData.Data), " bytes")
+		return fileData, nil
 	}
 
 	for update := range updates {
@@ -66,8 +67,8 @@ func telegramBot() {
 		case "c":
 			cmd := update.Message.CommandArguments()
 			query := strings.Split(cmd, " - ")
-			fmt.Printf("%v\n", query)
-			fileName, err := getImg(query)
+			log.Printf("%v\n", query)
+			imageObject, err := getImg(query)
 			if err != nil {
 				log.Println(err)
 				if err == context.DeadlineExceeded {
@@ -78,7 +79,14 @@ func telegramBot() {
 				bot.Send(msg)
 				continue
 			}
-			cardImg := tgbotapi.NewPhotoUpload(update.Message.Chat.ID, fileName)
+
+			// Telegram requires the file name, which is why you cannot just send the bytes.Buffer.
+			file := tgbotapi.FileBytes{
+				Name:  imageObject.Name,
+				Bytes: imageObject.Data,
+			}
+			log.Printf("NewPhotoUpload: %s (%d)\n", imageObject.Name, len(imageObject.Data))
+			cardImg := tgbotapi.NewPhotoUpload(update.Message.Chat.ID, file)
 			bot.Send(cardImg)
 		case "find":
 			fallthrough

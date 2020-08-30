@@ -8,7 +8,6 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"os"
 	"reflect"
 	"strings"
 	"time"
@@ -43,6 +42,11 @@ type Card struct {
 	UpdatedAt  time.Time          `bson:"updated_at" json:"updated_at,omitempty"`
 }
 
+type CardImage struct {
+	Name string
+	Data []byte
+}
+
 // format api url by struct tags
 func (card *Card) formatApiUrl(format string) string {
 	v := reflect.ValueOf(card).Elem()
@@ -61,7 +65,7 @@ func (card *Card) formatApiUrl(format string) string {
 	return strings.ToLower(strings.NewReplacer(args...).Replace(format))
 }
 
-func (sf *SFClient) GetImage(ctx context.Context, card Card) (string, error) {
+func (sf *SFClient) GetImage(ctx context.Context, card Card) (error, CardImage) {
 	// double-faced cards is a pain =)
 	switch card.Side {
 	case "a":
@@ -72,9 +76,18 @@ func (sf *SFClient) GetImage(ctx context.Context, card Card) (string, error) {
 		card.Face = "front"
 	}
 
-	fileName := conf.CacheDir + "/" + card.ScryfallID + "[" + card.Language + "][" + card.Face + "].jpg"
+	fileName := card.ScryfallID + "[" + card.Language + "][" + card.Face + "].jpg"
 
-	if _, err := os.Stat(fileName); os.IsNotExist(err) {
+	storageAvail := true
+	err, st := NewStorage(conf.Endpoint, conf.AccessKeyID, conf.SecretAccessKey, false, conf.Bucket)
+	if err != nil {
+		storageAvail = false
+	}
+
+	err, data := st.FindImage(fileName)
+
+	// could not find in local cache, get from remote api
+	if err != nil {
 		base, err := url.Parse(BaseURL)
 
 		relativeUrl := card.formatApiUrl("/cards/{code}/{number}/{lang}")
@@ -90,25 +103,20 @@ func (sf *SFClient) GetImage(ctx context.Context, card Card) (string, error) {
 
 		req, err := http.NewRequest("GET", base.ResolveReference(u).String(), nil)
 		if err != nil {
-			return "", err
+			return err, CardImage{}
 		}
 		body, err := sf.do(ctx, req)
 		if err != nil {
-			return "", err
+			return err, CardImage{}
 		}
 
-		file, err := os.Create(fileName)
-		if err != nil {
-			log.Fatal(err)
+		// save image to MinIO object storage
+		if storageAvail {
+			st.SaveImage(fileName, body)
 		}
-		defer file.Close()
-
-		_, err = file.Write(body)
-		if err != nil {
-			log.Fatal(err)
-		}
+		return nil, CardImage{Name: fileName, Data: body}
 	}
-	return fileName, nil
+	return nil, CardImage{Name: fileName, Data: data}
 }
 
 func (sf *SFClient) do(ctx context.Context, req *http.Request) ([]byte, error) {

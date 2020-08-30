@@ -6,6 +6,7 @@ require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/abadojack/whatlanggo v1.0.1
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
+	github.com/minio/minio-go/v7 v7.0.5
 	github.com/rylans/getlang v0.0.0-20190617180059-0a0f3a5aed5d
 	github.com/technoweenie/multipartstreamer v1.0.1 // indirect
 	go.mongodb.org/mongo-driver v1.3.2
