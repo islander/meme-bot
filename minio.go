@@ -18,7 +18,7 @@ type Storage struct {
 }
 
 // initialize object storage
-func NewStorage(endpoint, accessKeyID, secretAccessKey string, useSSL bool, bucket string) (error, Storage) {
+func NewStorage(endpoint, accessKeyID, secretAccessKey string, useSSL bool, bucket string) (Storage, error) {
 	// Initialize minio client object.
 	client, err := minio.New(endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
@@ -26,10 +26,10 @@ func NewStorage(endpoint, accessKeyID, secretAccessKey string, useSSL bool, buck
 	})
 	if err != nil {
 		log.Println("[storage] ERROR ", err)
-		return errors.New(fmt.Sprintf("Could not connect to MinIO server %s", endpoint)), Storage{}
+		return Storage{}, errors.New(fmt.Sprintf("Could not connect to MinIO server %s", endpoint))
 	}
 	storage := Storage{MinIO: client, bucket: bucket}
-	return nil, storage
+	return storage, nil
 }
 
 // create MinIO bucket to save images
@@ -67,14 +67,14 @@ func (st Storage) SaveImage(imageName string, imageBody []byte) error {
 	return nil
 }
 
-func (st Storage) FindImage(imageName string) (error, []byte) {
+func (st Storage) FindImage(imageName string) ([]byte, error) {
 	ctx := context.Background()
 
 	opts := minio.StatObjectOptions{}
 	info, err := st.MinIO.StatObject(ctx, st.bucket, imageName, opts)
 
 	if err != nil {
-		return err, nil
+		return nil, err
 	}
 
 	size := info.Size
@@ -90,8 +90,8 @@ func (st Storage) FindImage(imageName string) (error, []byte) {
 	log.Printf("[minio] Retrieved Object: %+v\n", obj)
 
 	if err != nil {
-		return err, nil
+		return nil, err
 	}
 
-	return nil, buffer
+	return buffer, nil
 }

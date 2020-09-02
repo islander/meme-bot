@@ -21,10 +21,13 @@ func init() {
 		panic("Could not read config meme.toml")
 	}
 
-	err, st := NewStorage(conf.Endpoint, conf.AccessKeyID, conf.SecretAccessKey, false, conf.Bucket)
+	st, err := NewStorage(conf.Endpoint, conf.AccessKeyID, conf.SecretAccessKey, false, conf.Bucket)
 	if err != nil {
 		panic("Could not connect to storage")
 	}
 
-	st.CreateBucket()
+	err = st.CreateBucket()
+	if err != nil {
+		panic("Could not create bucket")
+	}
 }

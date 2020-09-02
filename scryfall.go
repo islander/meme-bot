@@ -79,12 +79,12 @@ func (sf *SFClient) GetImage(ctx context.Context, card Card) (error, CardImage) 
 	fileName := card.ScryfallID + "[" + card.Language + "][" + card.Face + "].jpg"
 
 	storageAvail := true
-	err, st := NewStorage(conf.Endpoint, conf.AccessKeyID, conf.SecretAccessKey, false, conf.Bucket)
+	st, err := NewStorage(conf.Endpoint, conf.AccessKeyID, conf.SecretAccessKey, false, conf.Bucket)
 	if err != nil {
 		storageAvail = false
 	}
 
-	err, data := st.FindImage(fileName)
+	data, err := st.FindImage(fileName)
 
 	// could not find in local cache, get from remote api
 	if err != nil {
